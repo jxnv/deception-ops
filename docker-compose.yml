@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  webhook-receiver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deception-ops-canary-receiver
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - CORP_VPN_CIDRS=10.200.0.0/16,100.64.0.0/10,192.168.100.0/24
+      # Optional external alert dispatchers:
+      # - SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
+      # - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+      # - SIEM_ENDPOINT_URL=https://siem.corp.internal/api/v1/alerts
+    volumes:
+      - audit-logs:/app/audit_logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  audit-logs:
+    driver: local
